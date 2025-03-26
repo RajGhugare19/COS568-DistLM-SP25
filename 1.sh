@@ -1,0 +1,13 @@
+python3 1_run_glue.py \
+  --model_type bert \
+  --model_name_or_path bert-base-cased \
+  --task_name RTE \
+  --do_train \
+  --do_eval \
+  --data_dir /proj/cos568proj2-PG0/glue_data/RTE \
+  --max_seq_length 128 \
+  --per_device_train_batch_size 64 \
+  --learning_rate 2e-5 \
+  --num_train_epochs 3 \
+  --output_dir /proj/cos568proj2-PG0/groups/rg9360/COS568-DistLM-SP25/output1/ \
+  --overwrite_output_dir
