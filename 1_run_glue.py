@@ -215,12 +215,20 @@ def evaluate(args, model, tokenizer, prefix=""):
         result = compute_metrics(eval_task, preds, out_label_ids)
         results.update(result)
 
-        output_eval_file = os.path.join(eval_output_dir, "eval_results.txt")
-        with open(output_eval_file, "w") as writer:
+        with open(args.output_eval_file, "a") as writer:
             logger.info("***** Eval results {} *****".format(prefix))
             for key in sorted(result.keys()):
                 logger.info("  %s = %s", key, str(result[key]))
                 writer.write("%s = %s\n" % (key, str(result[key])))
+
+
+
+        # output_eval_file = os.path.join(eval_output_dir, "eval_results.txt")
+        # with open(output_eval_file, "w") as writer:
+        #     logger.info("***** Eval results {} *****".format(prefix))
+        #     for key in sorted(result.keys()):
+        #         logger.info("  %s = %s", key, str(result[key]))
+        #         writer.write("%s = %s\n" % (key, str(result[key])))
 
     return results
 
@@ -352,6 +360,19 @@ def main():
 
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train and not args.overwrite_output_dir:
         raise ValueError("Output directory ({}) already exists and is not empty. Use --overwrite_output_dir to overcome.".format(args.output_dir))
+    
+    os.makedirs(args.output_dir, exist_ok=True)
+    # create output files
+    output_eval_file = os.path.join(args.output_dir, "eval_results.txt") # evaluation
+    args.output_eval_file = output_eval_file
+    with open(output_eval_file, "w") as writer:
+        pass
+
+    output_train_file = os.path.join(args.output_dir, "train_results.txt") # training
+    args.output_train_file = output_train_file
+    with open(output_train_file, "w") as writer:
+        writer.write("step,process_loss")
+        pass
 
     # set up (distributed) training
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
