@@ -112,6 +112,8 @@ def train(args, train_dataset, model, tokenizer):
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch", disable=args.local_rank not in [-1, 0])
     set_seed(args)  # Added here for reproductibility (even between python 2 and 3)
 
+    losses = []
+
     all_iter_times = []
     for epoch_itr in train_iterator:    # change - raj
         train_sampler.set_epoch(epoch_itr)  # change - raj
@@ -139,6 +141,8 @@ def train(args, train_dataset, model, tokenizer):
                 ##################################################
                 # change - raj
                 loss.backward()
+                losses.append(loss.item())
+
                 for param in model.parameters():
                     if param.grad is None:
                         continue
@@ -149,7 +153,7 @@ def train(args, train_dataset, model, tokenizer):
                     torch.distributed.gather(param.grad.data, grad_list, dst=0)
                                         
                     if args.local_rank == 0:
-                        avg_grad = torch.stack(grad_list).sum() / args.world_size
+                        avg_grad = torch.stack(grad_list).sum(dim=0) / args.world_size
                         scatter_list = [avg_grad] * args.world_size
                     else:
                         scatter_list = None
@@ -181,6 +185,7 @@ def train(args, train_dataset, model, tokenizer):
             train_iterator.close()
             break
         
+        
         ##################################################
         # TODO(cos568): call evaluate() here to get the model performance after every epoch. (expect one line of code)
         # End of epoch: compute and log the average iteration time (excluding the first iteration).    
@@ -196,6 +201,10 @@ def train(args, train_dataset, model, tokenizer):
 
         evaluate(args, model, tokenizer, prefix="Epoch " + str(epoch_itr+1))
         ##################################################
+
+        with open(args.local_out_file, "w") as writer:
+            for i, loss in enumerate(losses):
+                writer.write(f"{loss}\n")
 
     return global_step, tr_loss / global_step
 
@@ -398,8 +407,12 @@ def main():
         raise ValueError("Output directory ({}) already exists and is not empty. Use --overwrite_output_dir to overcome.".format(args.output_dir))
     
     # create output files
-    out_file = os.path.join(args.output_dir, "output.txt") # evaluation
-    with open(out_file, "w") as writer:
+    args.out_file = os.path.join(args.output_dir, "output.txt") # evaluation
+    with open(args.out_file, "w") as writer:
+        pass
+    
+    args.local_out_file = os.path.join(args.output_dir, str(args.local_rank)+"__output.txt") # evaluation
+    with open(args.local_out_file, "w") as writer:
         pass
 
     torch.distributed.init_process_group(
