@@ -170,7 +170,7 @@ def train(args, train_dataset, model, tokenizer):
                 model.zero_grad()
                 global_step += 1
 
-            with open(args.output_file, "a") as writer:
+            with open(args.out_file, "a") as writer:
                 writer.write(f"epoch:{epoch_itr} step:{step} loss:{loss.item()}\n")
 
             end_time = time.time()
