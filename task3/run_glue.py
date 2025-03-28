@@ -450,6 +450,8 @@ def main():
     model = DistributedDataParallel(model)
     model.to(args.device)
 
+    print('Started training!!!!!!!!!!!!!!!!!!!!!!!')
+
     logger.info("Training/evaluation parameters %s", args)
 
 
