@@ -26,6 +26,7 @@ import random
 
 import numpy as np
 import torch
+from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
 from torch.utils.data.distributed import DistributedSampler
@@ -142,15 +143,6 @@ def train(args, train_dataset, model, tokenizer):
                 # change - raj
                 loss.backward()
                 losses.append(loss.item())
-
-                for param in model.parameters():
-                    
-                    if param.grad is None:
-                        continue
-
-                    torch.distributed.all_reduce(param.grad.data, op=torch.distributed.ReduceOp.SUM)
-                    param.grad.data.div_(args.world_size)
-                
                 ##################################################
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 
@@ -455,6 +447,7 @@ def main():
     if args.local_rank == 0:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 
+    model = DistributedDataParallel(model)
     model.to(args.device)
 
     logger.info("Training/evaluation parameters %s", args)

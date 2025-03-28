@@ -15,4 +15,5 @@ for i in range(4):
     plt.savefig(f"{i}_node_loss.png")  # Saves the figure
     plt.close()
 
+
 plt.show()
