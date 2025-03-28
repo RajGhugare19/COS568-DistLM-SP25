@@ -122,6 +122,10 @@ def train(args, train_dataset, model, tokenizer):
             outputs = model(**inputs)
             loss = outputs[0]  # model outputs are always tuple in pytorch-transformers (see doc)
 
+            if step < 5:
+                with open(args.output_file, "a") as writer:
+                    writer.write(f"epoch:{epoch_itr} step:{step} loss:{loss.item()}\n")
+
             if args.gradient_accumulation_steps > 1:
                 loss = loss / args.gradient_accumulation_steps
 
@@ -215,20 +219,11 @@ def evaluate(args, model, tokenizer, prefix=""):
         result = compute_metrics(eval_task, preds, out_label_ids)
         results.update(result)
 
-        with open(args.output_eval_file, "a") as writer:
+        with open(args.output_file, "a") as writer:
             logger.info("***** Eval results {} *****".format(prefix))
             for key in sorted(result.keys()):
                 logger.info("  %s = %s", key, str(result[key]))
                 writer.write("%s = %s\n" % (key, str(result[key])))
-
-
-
-        # output_eval_file = os.path.join(eval_output_dir, "eval_results.txt")
-        # with open(output_eval_file, "w") as writer:
-        #     logger.info("***** Eval results {} *****".format(prefix))
-        #     for key in sorted(result.keys()):
-        #         logger.info("  %s = %s", key, str(result[key]))
-        #         writer.write("%s = %s\n" % (key, str(result[key])))
 
     return results
 
@@ -363,9 +358,9 @@ def main():
     
     os.makedirs(args.output_dir, exist_ok=True)
     # create output files
-    output_eval_file = os.path.join(args.output_dir, "eval_results.txt") # evaluation
-    args.output_eval_file = output_eval_file
-    with open(output_eval_file, "w") as writer:
+    output_file = os.path.join(args.output_dir, "output.txt") # evaluation
+    args.output_file = output_file
+    with open(output_file, "w") as writer:
         pass
 
     # set up (distributed) training
