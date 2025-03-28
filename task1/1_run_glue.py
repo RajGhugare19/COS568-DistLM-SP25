@@ -368,12 +368,6 @@ def main():
     with open(output_eval_file, "w") as writer:
         pass
 
-    output_train_file = os.path.join(args.output_dir, "train_results.txt") # training
-    args.output_train_file = output_train_file
-    with open(output_train_file, "w") as writer:
-        writer.write("step,process_loss")
-        pass
-
     # set up (distributed) training
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     args.n_gpu = torch.cuda.device_count()
